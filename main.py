@@ -1,9 +1,7 @@
-import cv2 as cv
 import pandas as pd
 from math import atan,pi,degrees
 from pathlib import Path
 import xml.etree.ElementTree as et
-from tkinter import *
 
 nearest_neighbors = 8
 
@@ -12,17 +10,10 @@ class utilTools():
     def __init__(self, image, path):
         self.image=image
         self.path = path
-        self.bgr = cv.imread(self.image)
-        self.height, self.width = self.bgr.shape[:2]
-        self.center_height, self.center_widht = int(self.height / 2), int(self.width / 2)
-        self.black_color,self.red_color,self.blue_color,self.green_color = (0, 0, 0),(0, 0, 255),(255,0,0),(0,255,0)
-        self.origin = (self.center_widht, self.center_height)
         objects = [obj.name for obj in Path(self.path).iterdir()]
         self.extention = '.' + str(objects[0].split('.')[1])
         self.documents = [name.split('.')[0] for name in objects]
-        #self.draw_bgr()
         self.position=0
-        self.init_gui()
         self.totalElements=0
 
     def get_documents(self):
@@ -236,9 +227,6 @@ class utilTools():
 
         self.final_output = self.out_df[col_names]
 
-        #print("successfully!!")
-        #self.final_output.to_csv('output.csv',index=False)
-
     def save_atrr(self):
         print("successfully!!")
         self.final_output.to_csv('output.csv',index=False)
@@ -254,72 +242,6 @@ class utilTools():
             return degrees( pi/2)
         elif delta_x == 0 and delta_y < 0:
             return degrees( 3*pi/2)
-
-    def draw_bgr(self):
-        cv.line(self.bgr, (0, self.center_height), (2 * self.center_widht, self.center_height), self.black_color, 1,
-                cv.LINE_AA)
-        cv.line(self.bgr, (self.center_widht, 0), (self.center_widht, 2 * self.center_height), self.black_color, 1,
-                cv.LINE_AA)
-        cv.imshow('Draw', self.bgr)
-
-    def convert_y(self, y):
-        return self.height - y
-
-    def draw_all_points(self,point=0):
-        self.bgr = cv.imread(self.image)
-        self.draw_bgr()
-        for x,y in zip(list(self.out_df.x),list(self.out_df.y)):
-            self.draw_point(x,y,self.red_color)
-
-        current_x =self.out_df.x[point]
-        current_y = self.out_df.y[point]
-        self.draw_point(current_x, current_y, self.blue_color)
-        self.draw_curves(current_x,current_y,self.green_color)
-
-    def draw_point(self, x, y,color):
-        y = self.convert_y(y)
-        cv.circle(self.bgr, (x, y), 3, color, -1, cv.LINE_AA)
-        cv.imshow('Draw', self.bgr)
-
-    def draw_curves(self, x, y,color):
-        y = self.convert_y(y)
-        cv.circle(self.bgr, (x, y), 30, color, 1, cv.LINE_AA)
-        cv.circle(self.bgr, (x, y), 60, color, 1, cv.LINE_AA)
-        cv.circle(self.bgr, (x, y), 90, color, 1, cv.LINE_AA)
-        cv.imshow('Draw', self.bgr)
-
-    def init_gui(self):
-        self.root = Tk()
-        self.button_prev = Button(self.root, text='<<', padx=30, command=self.prev)
-        self.button_prev.grid(row=0, column=0)
-        self.button_next = Button(self.root, text='>>', padx=30, command=self.next)
-        self.button_next.grid(row=0, column=1)
-
-    def next(self):
-
-        self.button_prev.config(state="normal")
-        if self.position == self.totalElements-2:
-            self.button_next.config(state="disabled")
-            self.position += 1
-        else:
-            self.position += 1
-
-        self.draw_all_points(self.position)
-
-    def prev(self):
-        self.button_next.config(state="normal")
-        if self.position == 1:
-            self.button_prev.config(state="disabled")
-            self.position -= 1
-        if self.position > 1:
-            self.position -= 1
-        self.draw_all_points(self.position)
-
-    def show(self):
-        self.draw_all_points()
-        self.root.mainloop()
-        cv.waitKey(0)
-        cv.destroyAllWindows()
 
     def get_data_frame(self):
         self.clean_data_frame()
