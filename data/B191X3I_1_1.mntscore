@@ -1,0 +1,38 @@
+<MinutiaeScore type="diff" base_score="1.66239603697587" matcher="dmc_bcc">
+    <Experiment version="v0" score="-0.20073837338881995">
+        <MissingMinutia x="336" y="593" angle="72.0"/>
+    </Experiment>
+    <Experiment version="v1" score="-0.0011063091639098577">
+        <MissingMinutia x="337" y="628" angle="49.0"/>
+    </Experiment>
+    <Experiment version="v2" score="0.2930635098415202">
+        <MissingMinutia x="442" y="489" angle="29.0"/>
+    </Experiment>
+    <Experiment version="v3" score="-0.11233399321117998">
+        <MissingMinutia x="394" y="535" angle="21.0"/>
+    </Experiment>
+    <Experiment version="v4" score="-0.5904591964436299">
+        <MissingMinutia x="366" y="568" angle="336.0"/>
+    </Experiment>
+    <Experiment version="v5" score="0.0925125018984001">
+        <MissingMinutia x="456" y="651" angle="211.0"/>
+    </Experiment>
+    <Experiment version="v6" score="0.3278302551626602">
+        <MissingMinutia x="392" y="652" angle="212.0"/>
+    </Experiment>
+    <Experiment version="v7" score="0.012196336604060054">
+        <MissingMinutia x="366" y="659" angle="206.0"/>
+    </Experiment>
+    <Experiment version="v8" score="0.09194835464825002">
+        <MissingMinutia x="434" y="668" angle="207.0"/>
+    </Experiment>
+    <Experiment version="v9" score="0.6865716979570602">
+        <MissingMinutia x="384" y="673" angle="187.0"/>
+    </Experiment>
+    <Experiment version="v10" score="0.047308116979130066">
+        <MissingMinutia x="328" y="565" angle="101.0"/>
+    </Experiment>
+    <Experiment version="v11" score="-0.2189024193895499">
+        <MissingMinutia x="320" y="601" angle="94.0"/>
+    </Experiment>
+</MinutiaeScore>
