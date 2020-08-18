@@ -2,13 +2,15 @@ import pandas as pd
 from math import atan,pi,degrees
 from pathlib import Path
 import xml.etree.ElementTree as et
+from numpy import array
+import arff
 
 nearest_neighbors = 8
 
 class utilTools():
 
-    def __init__(self, image, path):
-        self.image=image
+    def __init__(self, path):
+
         self.path = path
         objects = [obj.name for obj in Path(self.path).iterdir()]
         self.extention = '.' + str(objects[0].split('.')[1])
@@ -55,9 +57,9 @@ class utilTools():
 
         i = 0
         matrix=[]
+        relative_distances_matrix = []
         matrix_minutias=[]
         for x,y,minutia in zip(x_vals,y_vals,minutia_vals):
-
             x_ref = x_vals.copy()
             y_ref = y_vals.copy()
             minutia_ref = minutia_vals.copy()
@@ -76,34 +78,58 @@ class utilTools():
             minutia_sorted = [ m[1] for m in distances_with_minutias ]
 
             row = distances[:nn]
+            fair_distance = distances[-1]
+            #print(distances,fair_distance)
             row_minutias = minutia_sorted[:nn]
+            #print(row,fair_distance)
+            relative_distances = list(array(row) / fair_distance)
+            #print("-",relative_distances  )
             matrix.append(row)
+            relative_distances_matrix.append(relative_distances)
             matrix_minutias.append(row_minutias)
             i += 1
+
         ann_matrix = []
+        ann_matrix_relative = []
         for row in matrix:
             row_ann = []
+            row_ann_relative=[]
             for level in levels:
                 counter=0
                 for element in row:
                     if element < level:
                         counter+=1
                 row_ann.append(counter)
+            #print(row_ann)
+            row_ann_relative.append(row_ann[0])
+            for j in range(1,len(row_ann),1):
+                current_relative = row_ann[j]-row_ann[j-1]
+                row_ann_relative.append(current_relative)
+            #print("-----",row_ann_relative)
             ann_matrix.append(row_ann)
+            ann_matrix_relative.append(row_ann_relative)
 
         # transpose of a matrix for Nearest Distances
         matrix= zip(*matrix)
         for i,row in enumerate(matrix):
             self.out_df['dA'+str(i)] = list(row)
-
+        # transpose of a matrix for Nearest Relative Distances
+        relative_distances_matrix = zip(*relative_distances_matrix)
+        for i,row in enumerate(relative_distances_matrix):
+            self.out_df['dR'+str(i)] = list(row)
+        # transpose of a matrix for the name of the nearest minutias
         matrix_minutias = zip(*matrix_minutias)
         for i,row in enumerate(matrix_minutias):
             self.out_df['mA'+str(i)] = list(row)
-
+        # transpose of a matrix for the ann absolute
         ann_matrix = zip(*ann_matrix)
         for level,row in zip(levels,ann_matrix):
             self.out_df['rA'+str(level)] = list(row)
-        
+        # transpose of a matrix for the ann relative
+        ann_matrix_relative = zip(*ann_matrix_relative)
+        for level,row in zip(levels,ann_matrix_relative):
+            self.out_df['rR'+str(level)] = list(row)
+
         #print(self.out_df)
 
     def get_beta_data_frame(self,nearest_minutia=0):
@@ -247,7 +273,7 @@ class utilTools():
         self.clean_data_frame()
         return self.final_output
 
-util = utilTools('white.png', 'data')
+util = utilTools('data')
 
 documents = util.get_documents()
 
@@ -259,17 +285,19 @@ bad_ones=[]
 for document in documents:
     print(document)
     util.make_data_frame(document)
-    print(util.out_df)
+
     if len(util.out_df) > nearest_neighbors:
         util.get_distances_ann_abs(nearest_neighbors,[30,60,90])
+        #print(util.out_df)
         util.get_beta_data_frame()
         util.get_alpha_data_frame()
         data = util.get_data_frame()
-        #print(data)
+        print(data)
         print("---")
         data_frame_list.append(data)
     else:
         bad_ones.append(document)
+
 
 for bad in bad_ones:
     print(bad)
@@ -279,7 +307,7 @@ print(len(bad_ones))
 for frame in data_frame_list:
     dataFrame = pd.concat([dataFrame, frame])
 
-dataFrame.to_csv('test.csv',index=False)
+dataFrame.to_csv("testF.csv",index=False)
 
-import arff
-arff.dump('All_outputs.arff', dataFrame.values , relation='minutias', names=dataFrame.columns)
+arff.dump("All_outputsF.arff", dataFrame.values , relation="minutias", names=dataFrame.columns)
+
