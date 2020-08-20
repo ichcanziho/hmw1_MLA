@@ -5,7 +5,12 @@ import xml.etree.ElementTree as et
 from numpy import array
 import arff
 
-nearest_neighbors = 8
+name = 'CleanData30'
+
+nearest_neighbors = 12
+rad=3 # con 25 obtienes TODOS
+step = 30 # puedes poner 15
+radios = [i for i in range(step,step*rad+1,step)]
 
 class utilTools():
 
@@ -112,11 +117,11 @@ class utilTools():
         # transpose of a matrix for Nearest Distances
         matrix= zip(*matrix)
         for i,row in enumerate(matrix):
-            self.out_df['dA'+str(i)] = list(row)
+            self.out_df['Absolute_Distance_'+str(i+1)] = list(row)
         # transpose of a matrix for Nearest Relative Distances
         relative_distances_matrix = zip(*relative_distances_matrix)
         for i,row in enumerate(relative_distances_matrix):
-            self.out_df['dR'+str(i)] = list(row)
+            self.out_df['Relative_Distance_'+str(i+1)] = list(row)
         # transpose of a matrix for the name of the nearest minutias
         matrix_minutias = zip(*matrix_minutias)
         for i,row in enumerate(matrix_minutias):
@@ -124,11 +129,11 @@ class utilTools():
         # transpose of a matrix for the ann absolute
         ann_matrix = zip(*ann_matrix)
         for level,row in zip(levels,ann_matrix):
-            self.out_df['rA'+str(level)] = list(row)
+            self.out_df['Absolute_Radio_'+str(level)] = list(row)
         # transpose of a matrix for the ann relative
         ann_matrix_relative = zip(*ann_matrix_relative)
         for level,row in zip(levels,ann_matrix_relative):
-            self.out_df['rR'+str(level)] = list(row)
+            self.out_df['Relative_Radio_'+str(level)] = list(row)
 
         #print(self.out_df)
 
@@ -205,25 +210,31 @@ class utilTools():
                 pj3 = int(pair[1][1:])
                 x_i = x_i_list[number]
                 y_i = y_i_list[number]
+                a_i = angle_i_list[number]
 
-                angle_j2, x_j2, y_j2 = angle_i_list[pj2], x_i_list[pj2], y_i_list[pj2]
-                angle_j3, x_j3, y_j3 = angle_i_list[pj3], x_i_list[pj3], y_i_list[pj3]
+                a_j2, x_j2, y_j2 = angle_i_list[pj2], x_i_list[pj2], y_i_list[pj2]
+                a_j3, x_j3, y_j3 = angle_i_list[pj3], x_i_list[pj3], y_i_list[pj3]
+                angle=2
+                P1 = [x_i,y_i,a_i]
+                P2 = [x_j2,y_j2,a_j2]
+                P3 = [x_j3, y_j3, a_j3]
+                # ---------------P1-----------------------
+                aux = self.get_alpha_angle(P1,P2)
+                alpha_1 = self.get_beta_angle(aux,P1[angle])
+                aux = self.get_alpha_angle(P1, P3)
+                alpha_2 = self.get_beta_angle(aux, P1[angle])
+                # ---------------P2-----------------------
+                aux = self.get_alpha_angle(P2, P1)
+                alpha_3 = self.get_beta_angle(aux, P2[angle])
+                aux = self.get_alpha_angle(P2, P3)
+                alpha_4 = self.get_beta_angle(aux, P2[angle])
+                # ---------------P3-----------------------
+                aux = self.get_alpha_angle(P3, P1)
+                alpha_5 = self.get_beta_angle(aux, P3[angle])
+                aux = self.get_alpha_angle(P3, P2)
+                alpha_6 = self.get_beta_angle(aux, P2[angle])
 
-                # ---------------p2-----------------------
-                aux = self.get_alpha_angle((x_i - x_j2), (y_i - y_j2))
-                alpha_3 = self.get_beta_angle(aux, angle_j2)
-                #------
-                # preguntar como se obtiene a4 es p3-p2 o p2-p3
-                aux = self.get_alpha_angle((x_j3 - x_j2), (y_j3 - y_j2))
-                alpha_4 = self.get_beta_angle(aux, angle_j2)
-                # ---------------p3-----------------------
-                aux = self.get_alpha_angle((x_i - x_j3), (y_i - y_j3))
-                alpha_5 = self.get_beta_angle(aux, angle_j3)
-                #------
-                aux = self.get_alpha_angle((x_j2 - x_j3), (y_j2 - y_j3))
-                alpha_6 = self.get_beta_angle(aux, angle_j3)
-
-                alpha_row += [alpha_3,alpha_4,alpha_5,alpha_6]
+                alpha_row += [alpha_1,alpha_2,alpha_3,alpha_4,alpha_5,alpha_6]
 
             alpha_matrix.append(alpha_row)
 
@@ -233,6 +244,20 @@ class utilTools():
             self.out_df['A'+str(i+1)] = alpha_matrix[i]
 
         #print(self.out_df)
+
+    def get_alpha_angle(self,p_i,p_j):
+        delta_x = p_i[0]-p_j[0]
+        delta_y = p_i[1]-p_j[1]
+        if delta_x > 0 and delta_y >= 0:
+            return degrees( atan(delta_y/delta_x))
+        elif delta_x > 0 and delta_y < 0:
+            return degrees( atan(delta_y / delta_x) + 2*pi)
+        elif delta_x < 0:
+            return degrees( atan(delta_y / delta_x) + pi)
+        elif delta_x == 0 and delta_y > 0:
+            return degrees( pi/2)
+        elif delta_x == 0 and delta_y < 0:
+            return degrees( 3*pi/2)
 
     def clean_data_frame(self):
         col_names = list(self.out_df.columns)
@@ -257,17 +282,7 @@ class utilTools():
         print("successfully!!")
         self.final_output.to_csv('output.csv',index=False)
 
-    def get_alpha_angle(self,delta_x,delta_y):
-        if delta_x > 0 and delta_y >= 0:
-            return degrees( atan(delta_y/delta_x))
-        elif delta_x > 0 and delta_y < 0:
-            return degrees( atan(delta_y / delta_x) + 2*pi)
-        elif delta_x < 0:
-            return degrees( atan(delta_y / delta_x) + pi)
-        elif delta_x == 0 and delta_y > 0:
-            return degrees( pi/2)
-        elif delta_x == 0 and delta_y < 0:
-            return degrees( 3*pi/2)
+
 
     def get_data_frame(self):
         self.clean_data_frame()
@@ -277,37 +292,50 @@ util = utilTools('data')
 
 documents = util.get_documents()
 
+#dataFrame = pd.read_csv('empty_data.csv')
 
-dataFrame = pd.read_csv('empty_data.csv')
+real_columns = ['fingerprint', 'minutia']
+Absdis_header = ['Absolute_Distance_'+str(i) for i in range(1,nearest_neighbors+1,1)]
+Reldis_header = ['Relative_Distance_'+str(i) for i in range(1,nearest_neighbors+1,1)]
+AbsRad_header = ['Absolute_Radio_'+str(i) for i in radios]
+RelRad_header = ['Relative_Radio_'+str(i) for i in radios]
+Beta_header = ['B'+str(i) for i in range(1,nearest_neighbors+1,1)]
+Alpha_header = ['A'+str(i) for i in range(1,(3*nearest_neighbors)+1,1)]
+
+header = real_columns+Absdis_header+Reldis_header+AbsRad_header+RelRad_header+Beta_header+Alpha_header+['score_change']
+dict_header = {head:[] for head in header}
+
+dataFrame = pd.DataFrame(dict_header)
 
 data_frame_list=[]
 bad_ones=[]
 for document in documents:
-    print(document)
-    util.make_data_frame(document)
 
-    if len(util.out_df) > nearest_neighbors:
-        util.get_distances_ann_abs(nearest_neighbors,[30,60,90])
-        #print(util.out_df)
+    util.make_data_frame(document)
+    total_minutias = len(util.out_df)
+    if total_minutias > nearest_neighbors:
+        print(document,total_minutias,'acepted')
+        util.get_distances_ann_abs(nearest_neighbors,radios)
         util.get_beta_data_frame()
         util.get_alpha_data_frame()
         data = util.get_data_frame()
-        print(data)
-        print("---")
         data_frame_list.append(data)
     else:
-        bad_ones.append(document)
 
-
-for bad in bad_ones:
-    print(bad)
-print(len(bad_ones))
-
+        if total_minutias %2 == 1:
+            new_nearest_neighbors = total_minutias -1
+        else:
+            new_nearest_neighbors = total_minutias - 2
+        print(document, total_minutias, 'change',new_nearest_neighbors)
+        util.get_distances_ann_abs(new_nearest_neighbors, radios)
+        util.get_beta_data_frame()
+        util.get_alpha_data_frame()
+        data = util.get_data_frame()
+        data_frame_list.append(data)
 
 for frame in data_frame_list:
     dataFrame = pd.concat([dataFrame, frame])
 
-dataFrame.to_csv("testF.csv",index=False)
-
-arff.dump("All_outputsF.arff", dataFrame.values , relation="minutias", names=dataFrame.columns)
-
+dataFrame.to_csv(name+".csv",index=False)
+dataFrame.fillna("?", inplace=True)
+arff.dump(name+"ARFF.arff", dataFrame.values , relation="minutias", names=dataFrame.columns)
